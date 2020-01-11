@@ -1,10 +1,10 @@
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
 
-from .serializers import UserCreateSerializer, LoginSerializer, EmailObjectSerializer
+from .serializers import UserCreateSerializer, LoginSerializer, EmailObjectSerializer, SendEmailSerializer
+
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 
@@ -54,5 +54,20 @@ class EmailObjectCreate(APIView):
         if serializer.is_valid():
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SendEmail(APIView):
+    serializer_class = SendEmailSerializer
+
+    @staticmethod
+    def post(request, pk):
+        serializer = SendEmailSerializer(data=request.data)
+        if serializer.is_valid():
+            print(serializer.validated_data)
+            serializer.send(email_object_id=pk, validated_data=serializer.validated_data)
+            data = {'status': 'success'}
+            return Response(data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
